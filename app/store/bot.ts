@@ -19,6 +19,7 @@ export const MESSAGE_ROLES: Message["role"][] = [
 ];
 
 export const AVAILABLE_DATASOURCES = [
+  "condominium_legal",
   "documents",
   "redhat",
   "watchos",

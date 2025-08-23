@@ -19,6 +19,11 @@ import {
 } from "./llamaindex/streaming/events";
 import { LLMConfig } from "@/app/store/bot";
 import { parseDataSource } from "./engine";
+import { 
+  detectObjective, 
+  executeLegalAnalysis, 
+  formatAnalysisResult 
+} from "@/app/lib/legal-analysis";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -91,6 +96,41 @@ export async function POST(request: NextRequest) {
       userMessage.content,
       annotations,
     );
+
+    // Check if this is a legal analysis request for condominium documents
+    const datasourceConfig = parseDataSource(datasource);
+    const isLegalAnalysis = datasourceConfig.pipeline === "condominium_legal";
+    const legalObjective = detectObjective(
+      typeof userMessageContent === 'string' ? userMessageContent : JSON.stringify(userMessageContent)
+    );
+
+    if (isLegalAnalysis && legalObjective) {
+      // Handle legal analysis request
+      try {
+        // For demonstration, we'll use the user message as document text
+        // In a real implementation, this would extract text from uploaded documents
+        const documentText = typeof userMessageContent === 'string' ? userMessageContent : "";
+        
+        const analysisResult = await executeLegalAnalysis(documentText, legalObjective);
+        const formattedResult = formatAnalysisResult(analysisResult);
+        
+        // Return the analysis result as a streaming response
+        const encoder = new TextEncoder();
+        const stream = new ReadableStream({
+          start(controller) {
+            controller.enqueue(encoder.encode(formattedResult));
+            controller.close();
+          }
+        });
+        
+        vercelStreamData.close();
+        clearTimeout(streamTimeout);
+        return new StreamingTextResponse(stream, {}, vercelStreamData);
+      } catch (analysisError) {
+        console.error("[Legal Analysis]", analysisError);
+        // Fall back to regular chat if legal analysis fails
+      }
+    }
 
     // Setup callbacks
     const callbackManager = createCallbackManager(vercelStreamData);
