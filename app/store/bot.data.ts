@@ -89,6 +89,30 @@ export const DEMO_BOTS: DemoBot[] = [
     readOnly: true,
     datasource: toLlamaCloudDataSource("basic_law_germany"),
   },
+  {
+    id: "6",
+    avatar: "1f3e2",
+    name: "Condominium Analysis Expert",
+    botHello:
+      "Olá! Sou especialista em análise de condomínios. Como posso ajudá-lo hoje?",
+    context: [
+      {
+        role: "system",
+        content: TEMPLATE(
+          "Condominium Analysis Expert specialized in Brazilian condominium regulations, financial analysis, and property management. You should help users understand condominium documents, analyze financial statements, review meeting minutes, and provide guidance on condominium administration. Always respond in Portuguese when the user writes in Portuguese.",
+        ),
+        id: "demo-bot-6-system-message",
+      },
+    ],
+    modelConfig: {
+      model: "gpt-4o-mini",
+      temperature: 0.1,
+      maxTokens: 4096,
+      sendMemory: false,
+    },
+    readOnly: true,
+    datasource: toLlamaCloudDataSource("condominium"),
+  },
 ];
 
 export const createDemoBots = (): Record<string, Bot> => {
